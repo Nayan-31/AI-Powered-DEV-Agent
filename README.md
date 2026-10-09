@@ -22,10 +22,36 @@
         • Humne kya kiya: Is controller mein humne if/else block chalaya jo middleware dwara set kiye gaye req.selectedAIModel ko padhta hai aur uske mutabiq sahi client (openaiClient ya geminiClient) ko call karta hai.
         
         • Kyun kiya (Reasoning): Yahan dhyan dijiye, humne premium model mein temperature: 0.2 set kiya hai. Kyun? Kyunki jab user code analysis ya portfolio compilation jaisa complex kaam karega, toh hamein AI se "creativity" ya kahaniyan nahi chahiye. Hamein strictly structured, deterministic aur accurate data chahiye.
-        
+
 
 4. src/routes/agentRoutes.js — Decoupled Endpoint Security
 
         • Humne kya kiya: router.post('/process-query', modelRouterMiddleware, handleAgentExecution);
 
         • Kyun kiya (Reasoning): Humne route handler mein controller se pehle modelRouterMiddleware ko pass kiya hai. Yeh Express ka Middleware Chaining Pattern hai. Iska fayda yeh hai ki controller ko khud dimaag nahi lagana padta ki use kaunsa model chalana hai. Controller ko ekdam saaf, pre-processed data milta hai. Is design pattern ko Separation of Concerns (SoC) kehte hain—routing ka kaam router ka, validation/routing decision middleware ka, aur execution controller ka.
+
+
+Step 2: RAG Pipeline ka Asli Flow Kaise Banega
+
+1.      Code Fetching (Expanding GitHub Tool)
+        Pehle hum ek naya GitHub tool banayenge jo sirf profile nahi, balki kisi repository ke andar ki files (jaise app.js, model.js) ka raw text (source code) fetch karega.
+
+2.      Chunking (Code ko chote tukdo mein todna)
+        Kyunki LLMs ki ek limit hoti hai (Context Window), hum ek poore repo ko ek sath AI ko nahi de sakte. Hum fetch kiye gaye code ko chote-chote "Chunks" (jaise 500-1000 words ya per-function) mein split karenge. Iske liye langchain ya custom JS functions ka use hoga.
+
+3.      Vector Embeddings (Text to Numbers)
+        Jo chunks humne tode hain, AI unhe padh nahi sakta jab tak wo Database mein dhoondhne layaq na ban jayein. Hum ek Embedding Model (jaise Mistral ka mistral-embed jiska error tumhe pehle aaya tha, wo yahan kaam aayega) use karke un code chunks ko Vectors (hazaaron numbers ki ek array) mein convert karenge. Ye numbers code ke meaning aur context ko store karte hain.
+
+4.      Pinecone Vector DB (Store & Semantic Search)
+        Ye saare vectors aur unka original code Pinecone mein save ho jayega.
+        Jab user prompt dega: "Nayan-31 ke repo mein authentication logic kahan likha hai?"
+
+        Backend is sawal ka Vector banayega.
+
+        Pinecone DB mein search karega ki kaunse code chunks is sawal se sabse zyada match karte hain (Semantic Search).
+
+        Pinecone wo top 3-4 relevant code chunks wapas dega.
+
+        Tumhara modelRouter un 3-4 chunks ko Mistral AI ko dega, aur Mistral unhe padh kar ek perfect summary ya answer generate karega.
+
+        Is pipeline ko start karne ke liye sabse pehla technical step Pinecone par account banakar ek free Vector Index create karna aur @pinecone-database/pinecone package install karna hoga. Agar Pinecone ka API key ready hai, toh hum embeddings generate karne wala naya middleware likhna shuru kar sakte hain.
