@@ -1,0 +1,25 @@
+{
+  "role": "assistant",
+  "content": "",
+  "toolCalls": [
+    {
+      "id": "IxBdK6jUS",
+      "type": "function",
+      "function": {
+        "name": "fetch_github_profile",
+        "arguments": "{\"username\": \"Nayan-31\"}"
+      },
+      "index": 0
+    },
+    {
+      "id": "2xawhTiqj",
+      "type": "function",
+      "function": {
+        "name": "ingest_repo_to_vectordb",
+        "arguments": "{\"username\": \"Nayan-31\", \"repo\": \"AI-Powered-DEV-Agent\"}"
+      },
+      "index": 1
+    }
+  ],
+  "prefix": false
+}
